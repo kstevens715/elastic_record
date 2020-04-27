@@ -49,14 +49,26 @@ module ElasticRecord
       end
 
       %i(
-        includes
         joins
         left_outer_joins
-        select
         where
       ).each do |ar_method|
         define_method ar_method do |*args, &block|
           raise "method #{ar_method} not supported"
+        end
+      end
+
+      %i(
+        includes
+        select
+      ).each do |ar_method|
+        define_method ar_method do |*args, &block|
+          result = klass.send(ar_method, *args, &block)
+          if result.is_a?(ActiveRecord::Relation)
+            self.class.new(result, values: values)
+          else
+            result
+          end
         end
       end
 
